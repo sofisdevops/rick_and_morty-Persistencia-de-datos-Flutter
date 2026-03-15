@@ -2,6 +2,7 @@ class Characters {
   final String id;
   final String name;
   final String status;
+  final String species;
   final String image;
   final String origin;
   final String location;
@@ -10,6 +11,7 @@ class Characters {
     required this.id,
     required this.name,
     required this.status,
+    required this.species,
     required this.image,
     required this.origin,
     required this.location,
@@ -19,7 +21,8 @@ class Characters {
     'id': id,
     'name': name,
     'status': status,
-    'image': image,
+    'species': species,
+    'image':image,
     'origin': origin,
     'location': location,
   };
@@ -28,6 +31,7 @@ class Characters {
     id: map['id'],
     name: map['name'],
     status: map['status'],
+    species: map['species'],
     image: map['image'],
     origin: map['origin'],
     location: map['location'],
