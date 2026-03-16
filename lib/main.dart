@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
-import 'screens/explore.dart';
+import 'screens/screenEsplore.dart';
+import 'provider/favourites_characters.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(providers: [
+      ChangeNotifierProvider(create: (_) => CharactersProvider()),
+    ],
+    child: const RickAPI(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class RickAPI extends StatelessWidget {
+  const RickAPI({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +25,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color.fromARGB(255, 0, 42, 5),
       ),
-      home: const Explore(),
+      home: const ScreenExplore(),
     );
   }
 }

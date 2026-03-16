@@ -7,7 +7,7 @@ class CharactersService {
 
   Future<List<Personaje>> getCharacters({String status = ''}) async {
     String statusFilter = (status == 'all') ? '' : status;
-    final url = Uri.parse('$_baseUrl?status=$statusFilter');
+    final url = Uri.parse('$_baseUrl?status=alive');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
