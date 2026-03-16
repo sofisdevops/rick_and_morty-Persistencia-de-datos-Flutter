@@ -1,4 +1,4 @@
-class Characters {
+class Personaje {
   final String id;
   final String name;
   final String status;
@@ -7,7 +7,7 @@ class Characters {
   final String origin;
   final String location;
 
-  Characters({
+  Personaje({
     required this.id,
     required this.name,
     required this.status,
@@ -27,7 +27,7 @@ class Characters {
     'location': location,
   };
 
-  factory Characters.fromMap(Map<String, dynamic> map) => Characters(
+  factory Personaje.fromMap(Map<String, dynamic> map) => Personaje(
     id: map['id'],
     name: map['name'],
     status: map['status'],

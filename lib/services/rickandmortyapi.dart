@@ -5,7 +5,7 @@ import '../models/characters.dart';
 class CharactersService {
   static const String _baseUrl = 'https://rickandmortyapi.com/api/character';
 
-  Future<List<Characters>> getCharacters({String status = ''}) async {
+  Future<List<Personaje>> getCharacters({String status = ''}) async {
     String statusFilter = (status == 'all') ? '' : status;
     final url = Uri.parse('$_baseUrl?status=$statusFilter');
     try {
@@ -14,7 +14,7 @@ class CharactersService {
         final Map<String, dynamic> data = json.decode(response.body);
         final List results = data['results'];
         return results.map((item) {
-          return Characters(
+          return Personaje(
             id: item['id'].toString(),
             name: item['name'] ?? 'Desconocido',
             status: item['status'] ?? 'Unknown',
