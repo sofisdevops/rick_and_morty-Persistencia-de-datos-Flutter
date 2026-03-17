@@ -6,12 +6,13 @@ class CharactersService {
   static const String _baseUrl = 'https://rickandmortyapi.com/api/character';
 
   Future<List<Personaje>> getCharacters({String status = ''}) async {
-    String statusFilter = (status == 'all') ? '' : status;
-    final url = Uri.parse('$_baseUrl?status=alive');
+    String statusFilter = (status == 'All') ? '' : status;
+    final url = Uri.parse('$_baseUrl?status=$statusFilter');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
+        
         final List results = data['results'];
         return results.map((item) {
           return Personaje(

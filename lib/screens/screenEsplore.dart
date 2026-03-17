@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../provider/favourites_characters.dart';
 import '../services/rickandmortyapi.dart';
+import '../provider/favourites_characters.dart';
 import '../models/characters.dart';
 
 class ScreenExplore extends StatefulWidget {
@@ -24,8 +24,12 @@ class _ScreenExploreState extends State<ScreenExplore> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _filtra('');
+  }
+
   Widget build(BuildContext context) {
-    // Escuchamos el proveedor para saber qué canciones son favoritas
     final favProvider = context.watch<CharactersProvider>();
 
     return Scaffold(
@@ -100,64 +104,233 @@ class _ScreenExploreState extends State<ScreenExplore> {
         child: Column(
           children: [
             _buildHeader(),
-            _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4, //columnas
-                  mainAxisSpacing: 5, //espacio y
-                  crossAxisSpacing: 5, //espacio x
-                  childAspectRatio: 1.2,
+            //boton de filtro
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  top: 4,
+                  left: 4,
+                  child: Container(
+                    width: 150,
+                    height: 45,
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      border: Border.all(color: Colors.black, width: 2),
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    ),
+                  ),
                 ),
-
-                itemCount: _results.length,
-                itemBuilder: (context, index) {
-                  final characterito = _results[index];
-                  final isFav = favProvider.favourites.any(
-                    (t) => t.id == characterito.id,
-                  );
-
-                  return Card(
-                    color: const Color(0xFFEFE7D1),
-                    shape: const RoundedRectangleBorder(
-                      side: BorderSide(color: Colors.black, width: 2),
-                    ),
-                    child: Column(
-                      children: [
-                        Expanded(child: Container(color: Colors.grey[300])),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            characterito.name,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                Container(
+                  width: 200,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFB4FF00),
+                    border: Border.all(color: Colors.black, width: 2),
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      dropdownColor: const Color(0xFFB4FF00),
+                      isExpanded: true,
+                      hint: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text(
+                          "FILTRA POR: Estado ",
+                          style: TextStyle(
+                            fontFamily: 'Shlop',
+                            color: Colors.black,
+                            fontSize: 40,
                           ),
                         ),
-
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          color: const Color(0xFF00B2FF),
-                          child: const Text(
-                            "Descripcion futura skdjaldj",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
+                      ),
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.black,
+                      ),
+                      items: <String>['All', 'Alive', 'Dead', 'Unknown'].map((
+                        String value,
+                      ) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Center(
+                            child: Text(
+                              value,
+                              style: const TextStyle(
+                                fontFamily: 'Shlop',
+                                color: Colors.black,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        _filtra(newValue ?? "");
+                      },
                     ),
-                  );
-                },
-              ),
-          ]
+                  ),
+                ),
+              ],
+            ),
+
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 5, //columnas
+                          mainAxisSpacing: 5, //espacio y
+                          crossAxisSpacing: 2, //espacio x
+                          childAspectRatio: 0.65,
+                        ),
+
+                    itemCount: _results.length,
+                    itemBuilder: (context, index) {
+                      final characterito = _results[index];
+                      final isFav = favProvider.favourites.any(
+                        (t) => t.id == characterito.id,
+                      );
+        
+                      return Stack(
+                        
+                        children: [
+                          
+                          Card(
+                            margin: const EdgeInsets.all(15),
+                            color: characterito.status == 'Dead'
+                            ? const Color.fromARGB(255, 252, 217, 217) 
+                            : characterito.status == 'Unknown' ?  const Color(0xFFEFE7D1)
+                            : const Color.fromARGB(255, 209, 228, 239),
+                            shape: const RoundedRectangleBorder(
+                              side: BorderSide(color: Colors.black, width: 2),
+                            ),
+                            child: Column(
+                              children: [
+                                Container(
+                                  margin: const EdgeInsets.only(top: 10),
+                                  width: 250,
+                                  height: 250,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[300],
+                                    border: Border.all(
+                                      color: Colors.black,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    child: Image.network(characterito.image,fit: BoxFit.cover,),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20,),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      const SizedBox(height: 8,),
+                                      Text(
+                                        characterito.name,
+                                        style: const TextStyle(
+                                          fontFamily: 'GoodBrush',
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 25,
+                                          color: Colors.black
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 8,),
+                                      Text(
+                                        characterito.location,
+                                        style: const TextStyle(
+                                          fontFamily: 'JMH',
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.black
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 8,),
+                                      Text(
+                                        characterito.origin,
+                                        style: const TextStyle(
+                                          fontFamily: 'JMH',
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.black
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 8,),
+                                      Text(
+                                        characterito.species,
+                                        style: const TextStyle(
+                                          fontFamily: 'JMH',
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.black
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Spacer(),
+                                Container(
+                                  width: double.infinity,
+                                  height: 40,
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  color: characterito.status == 'Dead' 
+                                  ? const Color.fromARGB(255, 149, 6, 49) 
+                                  : characterito.status == 'Alive' ?
+                                   const Color.fromARGB(255, 6, 149, 75) 
+                                      : const Color.fromARGB(255, 6, 97, 149),
+
+                                  child: Text(
+                                    characterito.status,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Color.fromARGB(255, 249, 247, 228),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      fontFamily: 'JMH',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          
+                          Container(
+                            margin: const EdgeInsets.only(left: 250),
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(255, 255, 193, 7),
+                              border: Border.all(
+                                color: Colors.amber,
+                                width: 2.0,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: IconButton(
+                              onPressed: () => favProvider.toggleFavourite(characterito) , 
+                              icon: Icon(
+                                isFav ? Icons.favorite
+                                : Icons.heart_broken_rounded,
+                                color: const Color.fromARGB(255, 140, 1, 1) ,)) ,
+                          ),
+                        
+                        ],
+                      );
+                    },
+                  ),
+          ],
         ),
       ),
     );
@@ -168,12 +341,9 @@ Widget _buildHeader() {
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 60),
     child: Row(
-      mainAxisAlignment: MainAxisAlignment
-          .spaceBetween, // Empuja el texto a la izquierda y botón a la derecha
-      crossAxisAlignment:
-          CrossAxisAlignment.center, // Alinea el botón con la base del texto
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // LADO IZQUIERDO: Títulos
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,73 +379,7 @@ Widget _buildHeader() {
             ],
           ),
         ),
-        _buildFilterButton(),
       ],
     ),
-  );
-}
-
-Widget _buildFilterButton() {
-  return Stack(
-    clipBehavior: Clip.none,
-    children: [
-      Positioned(
-        top: 4,
-        left: 4,
-        child: Container(
-          width: 150,
-          height: 45,
-          decoration: BoxDecoration(
-            color: Colors.black,
-            border: Border.all(color: Colors.black, width: 2),
-            borderRadius: BorderRadius.all(Radius.circular(12)),
-          ),
-        ),
-      ),
-      Container(
-        width: 200,
-        height: 90,
-        decoration: BoxDecoration(
-          color: const Color(0xFFB4FF00),
-          border: Border.all(color: Colors.black, width: 2),
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            dropdownColor: const Color(0xFFB4FF00),
-            isExpanded: true,
-            hint: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(
-                "FILTRA POR: ",
-                style: TextStyle(
-                  fontFamily: 'Shlop',
-                  color: Colors.black,
-                  fontSize: 40,
-                ),
-              ),
-            ),
-            icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
-            items: <String>['Estado', 'Especie', 'Locacion', 'Origen'].map((
-              String value,
-            ) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Center(
-                  child: Text(
-                    value,
-                    style: const TextStyle(
-                      fontFamily: 'Shlop',
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-            onChanged: (_) {},
-          ),
-        ),
-      ),
-    ],
   );
 }
