@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/screenEsplore.dart';
+import 'screens/main_screen.dart';
 import 'provider/favourites_characters.dart';
 import 'package:provider/provider.dart';
 
@@ -25,7 +25,7 @@ class RickAPI extends StatelessWidget {
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color.fromARGB(255, 0, 42, 5),
       ),
-      home: const ScreenExplore(),
+      home: const MainScreen(),
     );
   }
 }
