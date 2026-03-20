@@ -40,9 +40,16 @@ flutter run -d chrome
 
 ## Captura de pantalla 
 
-### screen explorar
+### screen Home
+<img width="1920" height="963" alt="image" src="https://github.com/user-attachments/assets/2589cfd7-0e28-468d-8dfd-e3fed16f66af" />
 
 ### screen explorar
+
+<img width="1920" height="963" alt="image" src="https://github.com/user-attachments/assets/9d622e2a-878c-4ede-b4aa-bf8ad92a282a" />
 
 ### screen favoritos
+<img width="1600" height="802" alt="image" src="https://github.com/user-attachments/assets/68dc21de-2714-4334-87b2-85626b2d23cc" />
+
+
+
 
