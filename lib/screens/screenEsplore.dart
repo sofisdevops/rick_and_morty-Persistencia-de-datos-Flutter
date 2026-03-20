@@ -11,16 +11,50 @@ class ScreenExplore extends StatefulWidget {
 }
 
 class _ScreenExploreState extends State<ScreenExplore> {
+  final SearchController _searchController = SearchController();
+  List<Personaje> _allResults = [];
   List<Personaje> _results = [];
+  String _searchQuery = '';
   bool _isLoading = false;
 
-  void _filtra(String status) async {
+  /// Valores mostrados en el dropdown; la API usa '' o 'All' para todos.
+  String _statusFilter = 'All';
+
+  Future<void> _filtra(String status) async {
     setState(() => _isLoading = true);
-    final results = await CharactersService().getCharacters(status: status);
+    final results = await CharactersService().getCharacters(
+      status: status.isEmpty ? 'All' : status,
+      name: '',
+    );
+    if (!mounted) return;
     setState(() {
-      _results = results;
+      _allResults = results;
+      _applySearch(_searchController.text);
       _isLoading = false;
     });
+  }
+
+  void _applySearch(String query) {
+    _searchQuery = query.trim().toLowerCase();
+    if (_searchQuery.isEmpty) {
+      _results = List<Personaje>.from(_allResults);
+      return;
+    }
+
+    _results = _allResults.where((personaje) {
+      return personaje.name.toLowerCase().contains(_searchQuery) ||
+          personaje.species.toLowerCase().contains(_searchQuery) ||
+          personaje.origin.toLowerCase().contains(_searchQuery) ||
+          personaje.location.toLowerCase().contains(_searchQuery) ||
+          personaje.id.toLowerCase().contains(_searchQuery);
+    }).toList();
+  }
+
+  void _onStatusChanged(String? value) {
+    if (value == null) return;
+    setState(() => _statusFilter = value);
+    final apiStatus = value == 'All' ? '' : value;
+    _filtra(apiStatus);
   }
 
   @override
@@ -29,144 +63,199 @@ class _ScreenExploreState extends State<ScreenExplore> {
     _filtra('');
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Widget build(BuildContext context) {
     final favProvider = context.watch<CharactersProvider>();
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 5, 149, 174),
-        elevation: 0,
-        title: Row(
-          children: [
-            Padding(padding: EdgeInsetsGeometry.only(left: 20)),
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned(
-                  left: -10,
-                  top: 10,
-                  child: Container(
-                    width: 45,
-                    height: 45,
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 232, 202, 3),
-                      border: Border.all(
-                        color: const Color.fromARGB(255, 213, 147, 4),
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                ),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 152, 4, 149),
-                    border: Border.all(
-                      color: const Color.fromARGB(255, 103, 6, 138),
-                      width: 2.5,
-                    ),
-                  ),
-                  child: const Text(
-                    "RickAPI",
-                    style: TextStyle(
-                      fontFamily: 'Shlop',
-                      color: Colors.white,
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              radius: 22,
-              backgroundColor: Colors.black,
-              child: const CircleAvatar(
-                radius: 20,
-                backgroundImage: NetworkImage(
-                  'https://rickandmortyapi.com/api/character/avatar/1.jpeg',
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildHeader(),
-            //boton de filtro
-            Stack(
-              clipBehavior: Clip.none,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Positioned(
-                  top: 4,
-                  left: 4,
-                  child: Container(
-                    width: 150,
-                    height: 45,
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      border: Border.all(color: Colors.black, width: 2),
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                    ),
-                  ),
-                ),
                 Container(
-                  width: 200,
-                  height: 90,
+                  margin: const EdgeInsets.all(20),
+                  width: 1400,
+                  constraints: const BoxConstraints(maxWidth: 1400),
+                  height: 88,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFB4FF00),
-                    border: Border.all(color: Colors.black, width: 2),
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderRadius: BorderRadius.circular(40),
+                    color: const Color(0xFF0C1712),
+                    border: Border.all(
+                      color: const Color(0xFF72F000),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF72F000).withValues(alpha: 0.42),
+                        blurRadius: 22,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 0),
+                      ),
+                    ],
                   ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      dropdownColor: const Color(0xFFB4FF00),
-                      isExpanded: true,
-                      hint: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text(
-                          "FILTRA POR: Estado ",
-                          style: TextStyle(
-                            fontFamily: 'Shlop',
-                            color: Colors.black,
-                            fontSize: 40,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          flex: 5,
+                          child: SearchAnchor(
+                            searchController: _searchController,
+                            builder:
+                                (BuildContext context, SearchController controller) {
+                              return SearchBar(
+                                controller: controller,
+                                backgroundColor: const WidgetStatePropertyAll(
+                                  Color(0xFF111D17),
+                                ),
+                                elevation: const WidgetStatePropertyAll(0),
+                                side: const WidgetStatePropertyAll(
+                                  BorderSide(
+                                    color: Color(0xFF274836),
+                                    width: 1.2,
+                                  ),
+                                ),
+                                shape: WidgetStatePropertyAll(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                ),
+                                hintText:
+                                    'Busca la genetica loka (e.g. Rick C-137)...',
+                                hintStyle: const WidgetStatePropertyAll(
+                                  TextStyle(
+                                    fontFamily: 'JMH',
+                                    color: Color(0xFF667A6F),
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                textStyle: const WidgetStatePropertyAll(
+                                  TextStyle(
+                                    fontFamily: 'JMH',
+                                    color: Color(0xFFE8F1EC),
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                padding:
+                                    const WidgetStatePropertyAll<EdgeInsets>(
+                                  EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 0,
+                                  ),
+                                ),
+                                onTap: () {
+                                  controller.openView();
+                                },
+                                onChanged: (value) {
+                                  setState(() {
+                                    _applySearch(value);
+                                  });
+                                  controller.openView();
+                                },
+                                leading: const Icon(
+                                  Icons.search_rounded,
+                                  color: Color(0xFF72F000),
+                                  size: 24,
+                                ),
+                                trailing: <Widget>[
+                                  if (controller.text.isNotEmpty)
+                                    IconButton(
+                                      tooltip: 'Limpiar',
+                                      onPressed: () {
+                                        controller.clear();
+                                        setState(() {
+                                          _applySearch('');
+                                        });
+                                      },
+                                      icon: const Icon(
+                                        Icons.close_rounded,
+                                        color: Color(0xFF95A89D),
+                                        size: 20,
+                                      ),
+                                    ),
+                                  Container(
+                                    width: 1.2,
+                                    height: 22,
+                                    color: const Color(0xFF2A3F33),
+                                  ),
+                                ],
+                              );
+                            },
+                            suggestionsBuilder:
+                                (BuildContext context, SearchController controller) {
+                              final query = controller.text.trim().toLowerCase();
+                              final suggestions = _allResults
+                                  .where((personaje) {
+                                    if (query.isEmpty) return true;
+                                    return personaje.name
+                                            .toLowerCase()
+                                            .contains(query) ||
+                                        personaje.id.toLowerCase().contains(
+                                              query,
+                                            );
+                                  })
+                                  .take(60)
+                                  .toList();
+
+                              return List<ListTile>.generate(suggestions.length, (
+                                int index,
+                              ) {
+                                final character = suggestions[index];
+                                return ListTile(
+                                  tileColor: const Color(0xFF111D17),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  title: Text(
+                                    character.name,
+                                    style: const TextStyle(
+                                      fontFamily: 'JMH',
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    'ID: ${character.id} - ${character.species}',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.7,
+                                      ),
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      controller.text = character.name;
+                                      _applySearch(character.name);
+                                      controller.closeView(character.name);
+                                    });
+                                  },
+                                );
+                              });
+                            },
                           ),
                         ),
-                      ),
-                      icon: const Icon(
-                        Icons.arrow_drop_down,
-                        color: Colors.black,
-                      ),
-                      items: <String>['All', 'Alive', 'Dead', 'Unknown'].map((
-                        String value,
-                      ) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Center(
-                            child: Text(
-                              value,
-                              style: const TextStyle(
-                                fontFamily: 'Shlop',
-                                color: Colors.black,
-                              ),
-                            ),
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          width: 200,
+                          child: _StatusFilterDropdown(
+                            value: _statusFilter,
+                            onChanged: _onStatusChanged,
                           ),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        _filtra(newValue ?? "");
-                      },
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -192,17 +281,16 @@ class _ScreenExploreState extends State<ScreenExplore> {
                       final isFav = favProvider.favourites.any(
                         (t) => t.id == characterito.id,
                       );
-        
+
                       return Stack(
-                        
                         children: [
-                          
                           Card(
                             margin: const EdgeInsets.all(15),
                             color: characterito.status == 'Dead'
-                            ? const Color.fromARGB(255, 252, 217, 217) 
-                            : characterito.status == 'Unknown' ?  const Color(0xFFEFE7D1)
-                            : const Color.fromARGB(255, 209, 228, 239),
+                                ? const Color.fromARGB(255, 252, 217, 217)
+                                : characterito.status == 'Unknown'
+                                ? const Color(0xFFEFE7D1)
+                                : const Color.fromARGB(255, 209, 228, 239),
                             shape: const RoundedRectangleBorder(
                               side: BorderSide(color: Colors.black, width: 2),
                             ),
@@ -220,59 +308,65 @@ class _ScreenExploreState extends State<ScreenExplore> {
                                     ),
                                   ),
                                   child: ClipRRect(
-                                    child: Image.network(characterito.image,fit: BoxFit.cover,),
+                                    child: Image.network(
+                                      characterito.image,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20,),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
-                                      const SizedBox(height: 8,),
+                                      const SizedBox(height: 8),
                                       Text(
                                         characterito.name,
                                         style: const TextStyle(
                                           fontFamily: 'GoodBrush',
                                           fontWeight: FontWeight.bold,
                                           fontSize: 25,
-                                          color: Colors.black
+                                          color: Colors.black,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 8,),
+                                      const SizedBox(height: 8),
                                       Text(
                                         characterito.location,
                                         style: const TextStyle(
                                           fontFamily: 'JMH',
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
-                                          color: Colors.black
+                                          color: Colors.black,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 8,),
+                                      const SizedBox(height: 8),
                                       Text(
                                         characterito.origin,
                                         style: const TextStyle(
                                           fontFamily: 'JMH',
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
-                                          color: Colors.black
+                                          color: Colors.black,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 8,),
+                                      const SizedBox(height: 8),
                                       Text(
                                         characterito.species,
                                         style: const TextStyle(
                                           fontFamily: 'JMH',
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
-                                          color: Colors.black
+                                          color: Colors.black,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -284,11 +378,13 @@ class _ScreenExploreState extends State<ScreenExplore> {
                                 Container(
                                   width: double.infinity,
                                   height: 40,
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
-                                  color: characterito.status == 'Dead' 
-                                  ? const Color.fromARGB(255, 149, 6, 49) 
-                                  : characterito.status == 'Alive' ?
-                                   const Color.fromARGB(255, 6, 149, 75) 
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                  ),
+                                  color: characterito.status == 'Dead'
+                                      ? const Color.fromARGB(255, 149, 6, 49)
+                                      : characterito.status == 'Alive'
+                                      ? const Color.fromARGB(255, 6, 149, 75)
                                       : const Color.fromARGB(255, 6, 97, 149),
 
                                   child: Text(
@@ -305,7 +401,7 @@ class _ScreenExploreState extends State<ScreenExplore> {
                               ],
                             ),
                           ),
-                          
+
                           Container(
                             margin: const EdgeInsets.only(left: 250),
                             width: 50,
@@ -319,13 +415,16 @@ class _ScreenExploreState extends State<ScreenExplore> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: IconButton(
-                              onPressed: () => favProvider.toggleFavourite(characterito) , 
+                              onPressed: () =>
+                                  favProvider.toggleFavourite(characterito),
                               icon: Icon(
-                                isFav ? Icons.favorite
-                                : Icons.heart_broken_rounded,
-                                color: const Color.fromARGB(255, 140, 1, 1) ,)) ,
+                                isFav
+                                    ? Icons.favorite
+                                    : Icons.heart_broken_rounded,
+                                color: const Color.fromARGB(255, 140, 1, 1),
+                              ),
+                            ),
                           ),
-                        
                         ],
                       );
                     },
@@ -337,49 +436,63 @@ class _ScreenExploreState extends State<ScreenExplore> {
   }
 }
 
-Widget _buildHeader() {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 60),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "MY GALACTIC",
-                style: TextStyle(
-                  fontFamily: 'Shlop',
-                  fontSize: 100,
-                  color: Color(0xFFB4FF00),
-                  height: 0.9,
-                ),
-              ),
-              const Text(
-                "COLLECTION",
-                style: TextStyle(
-                  fontFamily: 'Shlop',
-                  fontSize: 100,
-                  color: Color.fromARGB(255, 5, 149, 174),
-                  height: 0.9,
-                ),
-              ),
-              const SizedBox(height: 8),
+/// Filtro por estado (Alive / Dead / Unknown / All) al lado del SearchBar.
+class _StatusFilterDropdown extends StatelessWidget {
+  const _StatusFilterDropdown({
+    required this.value,
+    required this.onChanged,
+  });
 
-              const Text(
-                "Wubba Lubba dub-dub",
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
+  final String value;
+  final ValueChanged<String?> onChanged;
+
+  static const _items = <String>['All', 'Alive', 'Dead', 'Unknown'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF111D17),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: const Color(0xFF274836), width: 1.2),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          isExpanded: true,
+          dropdownColor: const Color(0xFF111D17),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: Color(0xFF72F000),
           ),
+          style: const TextStyle(
+            fontFamily: 'JMH',
+            color: Color(0xFFE8F1EC),
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+          hint: const Text(
+            'Estado',
+            style: TextStyle(
+              fontFamily: 'JMH',
+              color: Color(0xFF667A6F),
+              fontSize: 14,
+            ),
+          ),
+          items: _items.map((s) {
+            return DropdownMenuItem<String>(
+              value: s,
+              child: Text(
+                s == 'All' ? 'Todos' : s,
+                overflow: TextOverflow.ellipsis,
+              ),
+            );
+          }).toList(),
+          onChanged: onChanged,
         ),
-      ],
-    ),
-  );
+      ),
+    );
+  }
 }

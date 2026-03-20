@@ -28,12 +28,12 @@ class Personaje {
   };
 
   factory Personaje.fromMap(Map<String, dynamic> map) => Personaje(
-    id: map['id'],
-    name: map['name'],
-    status: map['status'],
-    species: map['species'],
-    image: map['image'],
-    origin: map['origin'],
-    location: map['location'],
-  );
+        id: '${map['id'] ?? ''}',
+        name: (map['name'] as String?) ?? 'Desconocido',
+        status: (map['status'] as String?) ?? 'Unknown',
+        species: (map['species'] as String?) ?? 'Unknown',
+        image: (map['image'] as String?) ?? 'https://via.placeholder.com/150',
+        origin: (map['origin'] as String?) ?? 'Unknown',
+        location: (map['location'] as String?) ?? 'Unknown',
+      );
 }
