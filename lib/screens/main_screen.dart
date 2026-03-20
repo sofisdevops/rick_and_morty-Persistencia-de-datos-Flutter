@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rickapi/screens/home_screen.dart';
 import 'package:rickapi/screens/screenEsplore.dart';
 import 'package:rickapi/screens/my_favourites.dart';
 
@@ -13,7 +14,13 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
   // Lista de pantallas para navegar
-  final List<Widget> _pages = [const ScreenExplore(), const MyFavourites()];
+  // El orden debe coincidir con los índices del BottomNavigationBar.
+  // 0: Search/Explore, 1: Home, 2: Favoritos.
+  final List<Widget> _pages = [
+    const ScreenExplore(),
+    const HomeScreen(),
+    const MyFavourites(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -118,8 +125,10 @@ class _MainScreenState extends State<MainScreen> {
                               '${_currentIndex == 0
                                   ? "Explorar"
                                   : _currentIndex == 1
-                                  ? "Favoritos"
-                                  : "Desconocido"}',
+                                      ? "Home"
+                                      : _currentIndex == 2
+                                          ? "Favoritos"
+                                          : "Desconocido"}',
                           style: TextStyle(
                             fontFamily: 'JMH',
                             color: Color(0xFF9e70d1),
